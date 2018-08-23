@@ -51,3 +51,33 @@ I used the following script to automagically set up a screen and run migrate in 
 
 So now "Round 2" of these runs is off and running. I'll wait a week to check in and start round 3.
 
+8/23/18
+
+Finished Round 3
+
+Rename outfiles like so
+```{bash}
+#!
+for d in */
+        do
+          cd $d
+          echo $d
+                for f in $(find ./ -maxdepth 1 -type f -exec grep -l 'Options in use' {} \;)
+                 do 
+                         mv $f outfile.txt
+                 done
+          cd ..
+        done  
+  
+#And wrap that up in a loop
+
+M053-303-26932:dongsha1 cran5048$ for e in */
+> do
+> cd $e
+> echo $e
+> bash ../../outfile_renamer.sh
+> cd ..
+> done
+
+```
+
