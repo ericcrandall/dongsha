@@ -3,7 +3,7 @@
 register_google(key="AIzaSyDNG9eIBTcVvGsQ-Wjh2WjzvsPAFnBoCgU")
 install.packages("ggmap", dependencies=T)
 library(ggmap)
-setwd("C:/Users/jacog/Desktop/Dongsha/data/")
+setwd("../data/")
 cstr_m<-read.csv("map_cords.csv")
 
 #find the midpoint of all sampled points

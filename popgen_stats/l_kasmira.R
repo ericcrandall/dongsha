@@ -4,8 +4,8 @@ library(strataG)
 library(pegas,dependencies=TRUE)
 library(raster)
 getwd()
-setwd("C:/Users/jacog/Desktop/Dongsha/data/l_kasmira")
-list.files("C:/Users/jacog/Desktop/Dongsha/data/l_kasmira")
+setwd("../data/l_kasmira")
+list.files("../data/l_kasmira")
 cstr<-read.FASTA("l_kasmira.fasta")
 cstr<-cstr[order(names(cstr))]
 image.DNAbin(cstr)
@@ -57,8 +57,8 @@ library(vegan)
 library(knitr)
 
 getwd()
-setwd("C:/Users/jacog/Desktop/Dongsha/data/l_kasmira")
-list.files("C:/Users/jacog/Desktop/Dongsha/data/l_kasmira")
+setwd("../data/l_kasmira")
+list.files("../data/l_kasmira")
 cstr<-read.FASTA("l_kasmira.fasta")
 
 #put them in alphabetical order
@@ -78,8 +78,8 @@ pairwise_phi
 
 pairwise_F<-pairwiseTest(cstr_g,stats="Fst",nrep=1000,quietly=T)
 pairwise_F
-setwd("C:/Users/jacog/Desktop/Dongsha/data/l_kasmira")
-list.files("C:/Users/jacog/Desktop/Dongsha/data/l_kasmira")
+setwd("../data/l_kasmira")
+list.files("../data/l_kasmira")
 cstr_m<-read.csv("map_cords.csv")
 cstr_unique<-unique(cstr_m[,c("locality","decimalLatitude","decimalLongitude")]) #pull out just locality and lat/longs, and get unique values
 cstr_unique

@@ -4,8 +4,8 @@ library(strataG)
 library(pegas,dependencies=TRUE)
 library(raster)
 getwd()
-setwd("C:/Users/jacog/Desktop/Dongsha/data/c_vrolikii")
-list.files("C:/Users/jacog/Desktop/Dongsha/data/c_vrolikii")
+setwd("../data/c_vrolikii")
+list.files("../data/c_vrolikii")
 cstr<-read.FASTA("c_vrolikii.fasta")
 cstr<-cstr[order(names(cstr))]
 image.DNAbin(cstr)
@@ -57,8 +57,8 @@ library(ggplot2)
 library(vegan)
 library(knitr)
 
-setwd("C:/Users/jacog/Desktop/Dongsha/data/c_vrolikii")
-list.files("C:/Users/jacog/Desktop/Dongsha/data/c_vrolikii")
+setwd("../data/c_vrolikii")
+list.files("../data/c_vrolikii")
 cstr<-read.FASTA("c_vrolikii.fasta")
 
 #put them in alphabetical order
