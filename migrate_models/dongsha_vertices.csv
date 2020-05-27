@@ -1,0 +1,21 @@
+vertex,island,sector,species,lat,long
+1,Dongsha,black,"ajaponicus,cauriga,clunulatus,cstriatus,cvrolikii,daruanus,lkasmira,nplicata,pcoelestis",20.679164,116.8200553
+2,Bunaken,gray50,cstriatus,1.6006694,124.7685673
+3,Aceh,gray50,cstriatus,5.3825383,94.9440343
+4,Krakatau,gray50,cstriatus,-6.1510587,105.4602013
+5,Sebayur,gray50,cstriatus,-8.5050047,119.7111353
+6,Okinoerabu,gray50,ajaponicus,27.4195427,128.568631
+7,Paracel Is.,gray50,"ajaponicus, daruanus",16.242344,111.791627
+8,Philippines,gray50,"ajaponicus, cvrolikii, daruanus, nplicata",11.57074,122.913058
+9,Christmas Island,gray50,"cauriga, lkasmira",-10.566237,105.668766
+10,Palau,gray50,"cauriga, clunulatus, cvrolikii",7.399886,134.469644
+11,Pohnpei,gray50,"cauriga, clunulatus",6.77086,158.276698
+12,Okinawa,gray50,"clunulatus, daruanus, nplicata, pcoelestis",26.434705,127.972734
+13,Kwajalein,gray50,clunulatus,8.729935,167.735376
+14,Great Barrier Reef,gray50,cvrolikii,-19.350209,148.686961
+15,Taiwan,gray50,"daruanus, pcoelestis",21.941084,120.749584
+16,Guam,gray50,lkasmira,13.407914,144.792902
+17,Fiji,gray50,lkasmira,-18.209224,178.360504
+18,Sabah,gray50,nplicata,6.349913,116.301478
+19,Hainan,gray50,pcoelestis,18.390432,109.952062
+20,O,black,"ajaponicus,cauriga,clunulatus,cstriatus,cvrolikii,daruanus,lkasmira,nplicata,pcoelestis",20.679164,126.8200553
