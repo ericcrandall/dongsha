@@ -189,7 +189,7 @@ for(sp in species){
   #NMDS
 
   NMDS_phi<-metaMDSiter(dist = pairwise_phi, k=2, try = 20, trymax = 100, 
-                        pc=T, zerodist="add", autotransform = F, maxit = 200, 
+                        pc=T, zerodist="ignore", autotransform = F, maxit = 200, 
                         model = "hybrid", threshold = 0.1)
   plot(NMDS_phi)
   
