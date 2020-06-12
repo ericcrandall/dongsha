@@ -230,7 +230,7 @@ for(dataset in names(modeltables[[1]])){
   bestmean<-m[order(y.mean,decreasing=T)[1]] # get the highest mean
   secondmean<-m[order(y.mean,decreasing=T)[2]] #get the second best mean
   ttest<-permTS(x=likes$bezier.corrected[which(likes$model==bestmean)], y=likes$bezier.corrected[which(likes$model==secondmean)], alternative="greater", method="exact.mc")
-  lbf<-2*ttest$estimate
+  
   
   values<-rbind(y.mean)
   values<-cbind(values,kmeans.p,bestmean,secondmean,ttest$p.value,lbf)
