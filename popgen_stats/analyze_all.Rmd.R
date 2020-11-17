@@ -97,7 +97,8 @@ for(sp in species){
   
   #write an arlequin file for FusFS analysis (just for the p-values)
   arlequinWrite(spdat_g,file=paste0("../data/",sp,".arp"))
-
+  write.mega(spdat_g,file=paste0("../data/",sp,".meg"), line.width = 1000, locus = 1)
+}
   #local Fst (Beta of Weir and Hill 2002 - equation 8 NOT of Foll and Gaggiotti 2006)
   spdat_wh<-cbind(spdat_g@data$stratum,spdat_g@data)
   beta_i <- betas(dat=spdat_wh, diploid=F)$betaiovl[dongdex]
@@ -108,23 +109,23 @@ for(sp in species){
   pi_mean <- mean(pi[-dongdex])
   pi_sd <- sd(pi[-dongdex])
   pi_p <- t.test(pi[-dongdex], mu=pi_dongsha, alternative="two.sided")$p.value
-  
+
   hd <- stratastat(spdat_p,pop=pop,fun=hap.div)
   hd_dongsha <- hd[dongdex]
   hd_mean <- mean(hd[-dongdex])
   hd_sd <- sd(hd[-dongdex])
   hd_p <- t.test(hd[-dongdex], mu=hd_dongsha, alternative="two.sided")$p.value
-  
+
   Fs <- stratastat(spdat_p, pop=pop, fun=fusFs)
   Fs <- unlist(Fs)
   Fs_dongsha <- Fs[dongdex]
   Fs_mean <- mean(Fs[-dongdex])
   Fs_sd <- sd(Fs[-dongdex])
   Fs_p <- t.test(Fs[-dongdex], mu=Fs_dongsha, alternative="greater")$p.value
-  
-  # put the stats into a vector   
-  stats <- c(n, haps, priv, priv/n*100, hd_dongsha, hd_mean, 2*hd_sd, hd_p, pi_dongsha, pi_mean, 2*pi_sd, pi_p, Fs_dongsha, Fs_mean, 2*Fs_sd, Fs_p, beta_i)
-  statdf[sp,] <- stats
+
+  # put the stats into a vector
+  #stats <- c(n, haps, priv, priv/n*100, hd_dongsha, hd_mean, 2*hd_sd, hd_p, pi_dongsha, pi_mean, 2*pi_sd, pi_p, Fs_dongsha, Fs_mean, 2*Fs_sd, Fs_p, beta_i)
+  #statdf[sp,] <- stats
   
   #pairwise stats
   pairwiseF<-pairwiseTest(spdat_g,stats=c("all"),nrep=1000,quietly=T,model="raw")
@@ -143,7 +144,7 @@ for(sp in species){
   pairwiseF$result$Fst[which(pairwiseF$result$Fst < 0)] <- 0
   
   phiplot <- ggplot(data=pairwiseF$result, aes(x=strata.1, y=strata.2,fill=PHIst)) + 
-              geom_raster() + 
+              geom_tile() + 
               annotate(geom = "text", 
                        x = pairwiseF$result$strata.1, 
                        y = pairwiseF$result$strata.2, 
@@ -160,12 +161,12 @@ for(sp in species){
                   panel.grid=element_blank()) +
              scale_y_discrete(limits=rev(levels(pairwiseF$result$strata.2)))
         
-  ggsave(filename=paste0(sp,"_PHIst.pdf"), plot=phiplot)
+  ggsave(filename=paste0(sp,"_PHIst2.pdf"), plot=phiplot)
   Phi_plotlist[[sp]] <- phiplot
   
   
   Fplot <- ggplot(data=pairwiseF$result, aes(x=strata.1, y=strata.2,fill=Fst)) + 
-            geom_raster() + 
+            geom_tile() + 
             annotate(geom = "text", 
                      x = pairwiseF$result$strata.1, 
                      y = pairwiseF$result$strata.2, 
@@ -195,7 +196,7 @@ for(sp in species){
   
 }
 
-write.csv(statdf,file="Dongsha_stats.csv")
+write.csv(statdf,file="Dongsha_stats_newcoelestis.csv")
 
 PhiPlots <- grid.arrange(grobs = Phi_plotlist,ncol=3)
 ggsave("PHIst_Plots.pdf",PhiPlots)

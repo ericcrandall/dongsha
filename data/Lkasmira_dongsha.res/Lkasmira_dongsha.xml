@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="file:///C:/Users/Eric/Desktop/WinArl35/ArlequinStyleSheet.xsl"?>
+<!--Arlequin results file-->
+
+<Arlequin>
+
+<data>
+
+
+</data>
+
+<header>
+Arlequin results
+</header>
+<data>
+
+</data>
+
+ <A NAME="17_11_20at11_31_36"></A> 
+<data>
+
+</data> <run time="17/11/20 at 11:31:36">
+
+////////////////////////////////////////////////////////////////////
+RUN NUMBER 1 (17/11/20 at 11:31:36)
+////////////////////////////////////////////////////////////////////
+
+</run> <data>
+</data>
+
+ <A NAME="17_11_20at11_31_36_run_information"></A> 
+<data>
+
+
+Project information:
+--------------------
+	NbSamples      =  1
+	DataType       =  DNA
+	GenotypicData  =  0
+
+</data> <title time="17/11/20 at 11:31:36">
+
+==============================
+Settings used for Calculations
+==============================
+
+</title> <data>
+
+ General settings:
+ -----------------
+        Deletion Weight                = 1
+        Transition Weight Weight       = 1
+        Tranversion Weight Weight      = 1
+        Epsilon Value                  = 1e-007
+        Significant digits for output  = 5
+        Use original haplotype definition
+        Alllowed level of missing data = 0.05
+
+ Active Tasks:
+ -------------
+
+    Fu's Neutraliy test:
+    --------------------
+        No. of Simultated Samples = 10000
+
+
+==============================================================================
+== ANALYSES AT THE INTRA-POPULATION LEVEL
+==============================================================================
+</data>
+
+ <A NAME="17_11_20at11_31_36_group0"></A> 
+<data>
+
+
+===============================================================================
+== Sample : 	Lkasmira_Dongsha
+===============================================================================
+
+
+===============================================
+== Fu's Fs test of selective neutrality : (Lkasmira_Dongsha)
+===============================================
+
+Reference: </data>
+<Reference>Fu, Y. X. (1996).</Reference>
+<data>
+Original No. of alleles(k)   :           6
+Theta(Pi)                    :     2.00000
+Exp. No. of alleles          :     3.18571
+Fs                           :    -4.35350
+
+No. of simulations           :       10000
+Mean Theta(Pi)               :     2.04701
+S.D. Theta(Pi)               :     1.52236
+Mean k                       :     3.22200
+S.D. k                       :     1.06669
+
+Prob(sim_Fs &lt;=obs_Fs)        :     0.00040
+
+
+
+================================================================================
+== Summary of computations done within populations
+================================================================================
+</data>
+
+ <A NAME="17_11_20at11_31_36_comp_sum_neutests"></A> 
+<data>
+
+
+----------------
+Neutrality tests
+------------------------------------------------------------------------------------------------------
+                                                  Statistics  Lkasmira_Dongsha        Mean        s.d.
+------------------------------------------------------------------------------------------------------
+Fu's FS test
+------------
+                                   No. of alleles(unchecked)                 6     6.00000     0.00000
+                                                    Theta_pi           2.00000     2.00000     0.00000
+                                         Exp. no. of alleles           3.18571     3.18571     0.00000
+                                                          FS          -4.35350    -4.35350     0.00000
+                                                  FS p-value           0.00040     0.00040     0.00000
+------------------------------------------------------------------------------------------------------
+
+////////////////////////////////////////////////////////////////////
+END OF RUN NUMBER 1 (17/11/20 at 11:31:36))
+Total computing time for this run : 0h 0m 0s 703 ms
+////////////////////////////////////////////////////////////////////
+
+
+</data>
+
+</Arlequin>
+
