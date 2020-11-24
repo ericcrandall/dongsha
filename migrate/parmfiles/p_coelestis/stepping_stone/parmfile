@@ -40,7 +40,7 @@ fst-type=THETA
 custom-migration={
 **00
 ***0
-0**0
+0***
 00**
 }
 geo=NO

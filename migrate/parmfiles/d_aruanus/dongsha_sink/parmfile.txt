@@ -38,7 +38,11 @@ migration=own:{100000}
 mutation=CONSTANT
 fst-type=THETA
 custom-migration={
-mmmmm
+****0
+0*0*0
+00***
+0****
+00***
 }
 geo=NO
 bayes-update=YES
