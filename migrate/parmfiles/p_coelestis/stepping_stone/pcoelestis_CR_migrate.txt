@@ -1,0 +1,187 @@
+  ===============================================
+   Control Region Data from Pomacentrus coelestis
+  ===============================================
+  MIGRATION RATE AND POPULATION SIZE ESTIMATION
+  using Markov Chain Monte Carlo simulation
+  ===============================================
+  Version 3.6.11
+
+  Program started at Fri Nov  3 09:51:55 2017
+         finished at Sat Nov  4 14:22:31 2017
+     
+
+
+Options in use:
+---------------
+
+Analysis strategy is BAYESIAN INFERENCE
+
+Proposal distribution:
+Parameter group          Proposal type
+-----------------------  -------------------
+Population size (Theta)  Metropolis sampling
+Migration rate      (M)       Slice sampling
+
+
+Prior distribution (Proposal-delta will be tuned to acceptance frequence 0.440000):
+Parameter group          Prior type   Minimum    Mean(*)    Maximum    Delta
+-----------------------  ------------ ---------- ---------- ---------- ----------
+Population size (Theta)   Exp window  0.000010   0.010000  10.000000   1.000000 
+Migration rate      (M)   Exp window  0.000100  100000.000 1000000.00 100000.000
+
+
+
+Datatype: DNA sequence data
+
+Inheritance scalers in use for Thetas (specified scalars=1)
+1.00 
+[Each Theta uses the (true) ineritance scalar of the first locus as a reference]
+
+
+Pseudo-random number generator: Mersenne-Twister                                
+Random number seed (with internal timer)            279388254
+
+Start parameters:
+   First genealogy was started using a random tree
+   Theta values were generated  from guessed values
+   Theta = 0.01000
+   M values were generated from guessed values
+   M-matrix: 100000.00 [all are the same]
+
+Migration model: Arbitrary migration matrix model            
+[Legend: m = average (average over a group of Thetas or M]
+[s = symmetric M, S = symmetric 4Nm,
+ 0 = zero, and not estimated,   ]
+[* = free to vary, Thetas are on diagonal]
+    Hainan     * * 0 0 
+   Dongsha     * * * 0 
+    Taiwan     0 * * 0 
+   Okinawa     0 0 * * 
+
+
+
+Mutation rate is constant 
+
+Markov chain settings:
+   Long chains (long-chains):                              1
+      Steps sampled (inc*samples*rep):              75000000
+      Steps recorded (sample*rep):                    150000
+   Combining over replicates:                              3
+   Static heating scheme
+      4 chains with  temperatures
+       1.00, 1.50, 3.00,100000.00
+      Swapping interval is 1
+   Burn-in per replicate (samples*inc):              5000000
+
+Print options:
+   Data file:                   ../pcoelestis_CR_migrate.mig
+   Output file (ASCII text):       pcoelestis_CR_migrate.txt
+   Output file (PDF):              pcoelestis_CR_migrate.pdf
+   Posterior distribution:                         bayesfile
+   All values of Post.Dist:                     bayesallfile
+   Print data:                                            No
+   Print genealogies:                                     No
+   Plot data: No                                            
+
+Summary of data:
+Title:        Control Region Data from Pomacentrus coelestis
+Data file:                      ../pcoelestis_CR_migrate.mig
+Datatype:                                      Sequence data
+Number of loci:                                            1
+
+Population                   Locus   Gene copies    
+----------------------------------------------------
+  1 Hainan                       1        13
+  2 Dongsha                      1        21
+  3 Taiwan                       1        62
+  4 Okinawa                      1        11
+    Total of all populations     1       107
+
+
+Empirical Base Frequencies
+------------------------------------------------------------
+Locus     Nucleotide                        Transition/
+          ------------------------------  Transversion ratio
+          A       C       G       T(U)
+------------------------------------------------------------
+   1      0.3442  0.1623  0.1608  0.3328       4.18000
+
+Region type     Rate of change    Probability
+---------------------------------------------
+        1           0.000            0.598
+        2           0.002            0.362
+        3           0.118            0.040
+        4           3.880            0.001
+
+
+
+
+
+
+Bayesian estimates
+==================
+
+Locus Parameter        2.5%      25.0%    mode     75.0%   97.5%     median   mean
+-----------------------------------------------------------------------------------
+    1  Theta_1         0.00001  0.00001  0.01001  0.08001  0.18001  0.09001  0.02610
+    1  Theta_2         0.00001  0.00001  0.01001  0.06001  0.16001  0.07001  0.01070
+    1  Theta_3         0.00001  0.02001  0.09001  0.16001  0.26001  0.13001  0.09508
+    1  Theta_4         0.00001  0.00001  0.01001  0.06001  0.16001  0.07001  0.01056
+    1  M_2->1             0.00     0.00  1000.00  6000.00 16000.00  7000.00  1134.64
+    1  M_1->2          4000.00 12000.00 85000.00 152000.00 372000.00 541000.00 506624.71
+    1  M_3->2             0.00     0.00  1000.00 138000.00 648000.00 139000.00 292708.07
+    1  M_2->3             0.00     0.00  1000.00  6000.00 18000.00  7000.00  2827.10
+    1  M_3->4         56000.00 104000.00 145000.00 226000.00 990000.00 515000.00 511374.30
+-----------------------------------------------------------------------------------
+
+
+
+Log-Probability of the data given the model (marginal likelihood = log(P(D|thisModel))
+--------------------------------------------------------------------
+[Use this value for Bayes factor calculations:
+BF = Exp[log(P(D|thisModel) - log(P(D|otherModel)]
+shows the support for thisModel]
+
+
+
+(1a) Thermodynamic integration: log(Prob(D|Model))=-1610.213051 (-1484.355998 with Bezier-approximation[1b]) 
+(2) Harmonic mean:             log(Prob(D|Model))=-1253.264874
+(1) and (2) should give a similar result, in principle.
+But (2) is overestimating the likelihood, it and is presented for historical reasons and should not be used. But (1) needs heating with chains that span a temperature range of 1.0 to at least 100,000.
+
+MCMC run characteristics
+========================
+
+
+
+
+Acceptance ratios for all parameters and the genealogies
+---------------------------------------------------------------------
+
+Parameter           Accepted changes               Ratio
+Theta_1                 297596/4164105           0.07147
+Theta_2                3592836/4167015           0.86221
+Theta_3                   3650/4166008           0.00088
+Theta_4                3952984/4163359           0.94947
+M_2->1                 4164025/4164025           1.00000
+M_1->2                 4168765/4168765           1.00000
+M_3->2                 4164328/4164328           1.00000
+M_2->3                 4168472/4168472           1.00000
+M_3->4                 4166912/4166912           1.00000
+Genealogies            3510277/37507011          0.09359
+Autocorrelation and Effective sample size
+-------------------------------------------------------------------
+
+  Parameter         Autocorrelation      Effective Sample size
+  ---------         ---------------      ---------------------
+  Theta_1                0.88033              9561.04
+  Theta_2                0.04814            136426.66
+  Theta_3                0.99514               365.53
+  Theta_4                0.00677            147985.16
+  M_2->1                 0.99331               503.75
+  M_1->2                 0.96582              2613.32
+  M_3->2                 0.97925              1575.75
+  M_2->3                 0.94837              4125.06
+  M_3->4                 0.80087             16593.85
+  Ln[Prob(D|P)]          0.90779              7250.79
+
