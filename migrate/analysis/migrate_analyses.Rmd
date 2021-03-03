@@ -17,10 +17,17 @@ for d in */
         do
           cd $d
           echo $d
+            for e in */
+            do
+            echo $e
+            cd $e
                 for f in $(find ./ -maxdepth 1 -type f -exec grep -l 'Parmfile' {} \;)
                  do 
+                         echo mv $f parmfile
                          mv $f parmfile
                  done
+             cd ..
+             done
           cd ..
         done  
  
@@ -68,7 +75,7 @@ for d in */
           echo $d
                 for f in $(find ./ -maxdepth 1 -type f -exec grep -l 'Options in use' {} \;)
                  do 
-                         mv $f outfile.txt
+                         echo mv $f outfile.txt
                  done
           cd ..
         done  
@@ -108,7 +115,7 @@ bfcalcs<-function(df,ml="bezier.corrected"){
 ## Harvesting Likelihoods
 
 ```{r harvest_likelihoods}
-wd<-"~/Datasets/dongsha/"
+wd<-"~/Datasets/dongsha_migrate/"
 setwd(wd)
 
 m<-c("panmixia","n_island","dongsha_sink","dongsha_source","stepping_stone")
@@ -173,7 +180,7 @@ head(modeltables[[1]],1)
 ```{r}
 library(ggplot2)
 setwd(wd)
-speciesnames<-read.csv("species_names.csv")
+speciesnames<-read.csv("~/github/dongsha/species_names.csv")
 
 pdf(file = "thermodynamic_marginal_likelihoods_final.pdf",width=8.5,height=3)
 means<-list()
@@ -218,27 +225,32 @@ library(perm)
 
 meanlikes<-list()
 permtests<-data.frame(matrix(ncol = 10, nrow = 0))
-colnames(permtests)<-c(m,"k-means p-value","Best Mean","Second Best Mean","p-value Best Mean > Second Mean", "Log Bayes Factor")
+colnames(permtests)<-c(m,"k-means p-value","Best Mean","Second Best Mean","p-value Best Mean > Second Mean", "Ln Bayes Factor")
 
 for(dataset in names(modeltables[[1]])){
+  print(dataset)
   likes<-rbind(cbind(modeltables[[1]][[dataset]],rep=1), cbind(modeltables[[2]][[dataset]],rep=2), cbind(modeltables[[3]][[dataset]], rep=3))
   likes$model<-factor(likes$model, m)
   likes<-likes[!(is.na(likes$model)),]
   likes$model<-factor(likes$model, m)
   y.mean<-as.vector(by(likes$bezier.corrected,likes$model,mean)) #take the means for each model
-  kmeans.p<-permKS(x = likes$bezier.corrected, g = likes$model, method="exact.mc")$p.value #k-means non-parametric test to compare all means
+  kmeans.p<-permKS(x = likes$bezier.corrected, g = likes$model, 
+                   method="exact.mc")$p.value #k-means non-parametric test to compare all means
   bestmean<-m[order(y.mean,decreasing=T)[1]] # get the highest mean
   secondmean<-m[order(y.mean,decreasing=T)[2]] #get the second best mean
-  ttest<-permTS(x=likes$bezier.corrected[which(likes$model==bestmean)], y=likes$bezier.corrected[which(likes$model==secondmean)], alternative="greater", method="exact.mc")
+  ttest<-permTS(x=likes$bezier.corrected[which(likes$model==bestmean)],
+                y=likes$bezier.corrected[which(likes$model==secondmean)], 
+                alternative="greater", method="exact.ce")
   
   
   values<-rbind(y.mean)
+  bmvalue<-y.mean[which.max(y.mean)]
+	lbf <- 2*(y.mean-bmvalue)
   values<-cbind(values,kmeans.p,bestmean,secondmean,ttest$p.value,lbf)
   
   permtests[dataset,]<-values
 
-	bmvalue<-y.mean[which.max(y.mean)]
-	lbf<-2*(y.mean-bmvalue)
+
 	modelrank<-rank(-y.mean)
 	modelprob<-exp(lbf/2)/sum(exp(lbf/2),na.rm=T)
 	dfall<-cbind("Mean Bezier Corrected ML"=as.numeric(y.mean),"LBF"=as.numeric(lbf),"Rank"=as.numeric(modelrank),"Model_Probability"=as.numeric(modelprob))
@@ -256,16 +268,17 @@ getmodels2<-function(dfr){
   model2<-row.names(dfr)[which(dfr$Rank==2)]
   modelprob1<-dfr$Model_Probability[which(dfr$Rank==1)]
   modelprob2<-dfr$Model_Probability[which(dfr$Rank==2)]
+  lnBF <- dfr$LBF[which(dfr$Rank ==2)]
   print(model1)
   print(model2)
   print(modelprob1)
-  c(model1,modelprob1,model2,modelprob2)
+  c(model1,modelprob1,model2,modelprob2,lnBF)
 }
 
 bestmodeltable<-lapply(meanlikes,getmodels2)
 bestmodeltable<-t(as.data.frame(bestmodeltable))
-colnames(bestmodeltable)<-c("bestmodel","bestmodelprob","secondbestmodel","secondbestmodelprob")
-bestmodeltable<-cbind(bestmodeltable,permtests[6],permtests[9])
+colnames(bestmodeltable)<-c("bestmodel","bestmodelprob","secondbestmodel","secondbestmodelprob","lnBF")
+bestmodeltable<-cbind(bestmodeltable,permtests[,c(6,9)])
 
 
 write.csv(bestmodeltable,file="Final_BestModeltable_Using_Means_of_3reps.csv")
@@ -313,18 +326,6 @@ for(dataset in names(modeltables[[1]])){
 #
 #means$model<-factor(means$model,levels=m,labels=c("k <= 14, Stepping-Stone, ~40 parameter","k <= 14, Stepping-Stone, 2 parameter","k = 3, 2 Currents, 7 parameter","k = 2, 1 Current, 4 parameter", "k = 2, High/Low Islands, 4 parameter","k = ? Empirical Structure, ? parameter","k <= 14, n-Island, 2 parameter","k=1, Panmixia, 1 parameter"))
 
-# This is the order I settled on - significant first.
-#species2<-c("Cellana talcosa", "Ophiocoma pica", "Chaetodon miliaris", 
-"Zebrasoma flavescens", "Caranx melampygus", "Heterocentrotus mammillatus", 
-"Mulloidichthys vanicolensis", "Panulirus penicillatus", "Calcinus hazletti", 
-"Chaetodon multicinctus", "Chaetodon lunulatus", "Holothuria atra", 
-"Cellana exarata", "Holothuria whitmaei", "Halichoeres ornatissimus", "Acanthurus olivaceus","Gymnothorax flavimarginatus","Squalus mitsukurii", 
-"Abudefduf abdominalis", "Mulloidichthys flavolineatus", "Stenella longirostris", "Panulirus marginatus",
-"Chaetodon fremblii", "Calcinus seurati", "Epinephelus quernus", "Lutjanus kasmira", 
-"Acanthurus nigroris",  "Etelis marshi", "Parupeneus multifasciatus", "Ctenochaetus strigosus","Triaenodon obesus", "Abudefduf vaigiensis", "Stegastes fasciolatus", 
-"Pristipomoides filamentosus", "Cellana sandwicensis", "Dascyllus albisella", 
-"Acanthurus nigrofuscus", "Acanthaster planci", "Ophiocoma erinaceus", 
-"Gymnothorax undulatus", "Myripristis berndtii")
 
 #means$species<-factor(means$species,levels=species2)
 means$model<-factor(means$model,levels=m,labels=c("Panmixia","N-Island","Dongsha Sink","Dongsha Source", "Stepping-Stone"))
@@ -332,10 +333,9 @@ means$model<-factor(means$model,levels=m,labels=c("Panmixia","N-Island","Dongsha
 library(ggplot2)
 library(RColorBrewer)
 
-my.cols<-brewer.pal(8,"RdYlBu")
-my.cols[8]<-"#7f7f7f"
-my.cols[5]<-"#FFFFBF"
-my.cols[6]<-"#FFFF00"
+my.cols<-rev(brewer.pal(5,"RdYlBu"))
+my.cols[1]<-"#7f7f7f"
+
 
 
 mprobs<-ggplot(data=means,mapping=aes(x=species,y=modelprob,fill=model)) + 
@@ -346,4 +346,279 @@ mprobs<-ggplot(data=means,mapping=aes(x=species,y=modelprob,fill=model)) +
 mprobs
 
 ggsave(filename = "dongsha_bars_final_landscape.pdf", width = 8, height=6,units = "in")
+```
+
+
+## Re-running models
+
+1/8/2021
+
+Argg! As I went to write the paper, I found that some of the students had mis-specified some of their migrate models. I am now re-running these at Pennsylvania State University. Only going to re-run models with directories labeled with "_r"
+
+```{unix migrate_batch.sh}
+#!
+for s in $(find ./ -maxdepth 1 -type d -name "*_r*")
+do
+      cd $s
+
+        for m in $(find ./ -maxdepth 1 -type d -name "*_r*")
+        do
+                cd $m
+                echo $m
+                screen -d -m migrate-n
+                cd ..
+        done
+    cd ..
+done
+
+```
+}
+
+# Migration parameters
+
+```{r setup_parameters}
+# Load packages
+library(coda)
+library(ggmcmc)
+library(gridExtra)
+library(reshape2)
+library(modeest)
+
+#a function for creating Nm vectors out of m and Theta vectors.
+migrants.per.gen<-function(x){
+  #x<-x[[1]]
+  m<-names(x)[which(grepl("M_",names(x)))] #names of m columns
+  #theta<-names(x)[which(grepl("Theta_",names(x)))] #names of theta columns
+  for(n in m){
+    t<-paste("Theta",strsplit(n,split="_")[[1]][3],sep="_")
+    x[,paste("Nm",strsplit(n,split="_")[[1]][2],strsplit(n,split="_")[[1]][3],sep="_")]<-  	x[,which(names(x)==n)]*x[,which(names(x)==t)] #this hairy little statement makes a new column named "Nm_X_Y" and then fills it by multiplying the M_X_Y column by the Theta_Y column	
+  }
+  return(x)
+}
+
+in.v.out<-function(x,parameters){
+  #x<-x[[1]]
+  outies <- paste0("M_",parameters[seq(1,length(parameters),by=2)])
+  innies <- paste0("M_",parameters[seq(2,length(parameters),by=2)])
+  names(x)[names(x) %in% outies] <- paste0(names(x)[names(x) %in% outies],"_Out")
+  names(x)[names(x) %in% innies] <- paste0(names(x)[names(x) %in% innies],"_Into")
+  return(x)
+}
+
+mode <- function(x){
+dens = density(x)
+mo = dens$x[which.max(dens$y)]
+return(mo)
+}
+
+
+```
+
+
+```{r}
+wd <- "/Users/eric/Datasets/dongsha_migrate"
+finaloutput <- "/Users/eric/github/dongsha/migrate/analysis"
+
+names<-read.csv("~/github/dongsha/Species_names.csv", stringsAsFactors = F)
+model <- "stepping_stone"
+ssNm <- tibble()
+ssM <- tibble()
+ssT <- tibble()
+directional <- tibble()
+
+for(sp in c("c_striatus","c_vroliki","c_auriga","a_japonicus")){
+#sp <- "a_japonicus"
+
+  splevels_list <- list(a_japonicus = c("1_2","2_1","1_3",
+                                   "3_1","1_4","4_1"),
+                   c_vroliki = c("1_2","2_1"),
+                   c_striatus = c("1_2","2_1"),
+                   c_auriga = c("2_3","3_2"))
+  
+  splevels <- splevels_list[[sp]]
+  spname <- names$Species[which(names$Working == sp)]
+  
+  print(paste("Starting", spname))
+  
+  data.list<-list() #initialize an empty data list
+  allstatstable<-list()
+  
+    for(r in 1:3){  #loop through the 3 replicate rounds
+        wd1<-file.path(wd,paste("dongsha",r,sep=""),sp,model)
+        setwd(wd1)  #move into that species' and model directory
+        
+        print(paste("loading and processing bayesallfile for round", r))
+        data<-read.table("bayesallfile", header=T) #this may take a minute or two
+      
+        # Split the whole list into the individual replicates, so that you will
+        # have a list of data frames
+        data.list.1<-split(data,data$Replicate)
+        
+        # Burnin already removed for this project
+        
+        # calculate Nm for each row
+        data.list.2<-lapply(data.list.1,migrants.per.gen)
+        
+        # rename M parameters
+        data.list.2 <- lapply(data.list.2, in.v.out, parameters=splevels)
+        
+        # cat it onto the main list
+        data.list<-c(data.list,data.list.2)
+    }
+    
+    #convert each dataframe to an mcmc object and then convert the whole thing to an mcmc list
+      #data.list.mcmc<-mcmc.list(lapply(data.list,mcmc))
+      #condense everything into a single mcmc replicate for the purposes of HPDinterval
+      #data.list.allinone<-mcmc(data=do.call("rbind",data.list)) 
+      
+      #calculate statistics
+      #print("calculating statistics")
+      #summ<-summary(data.list.mcmc)
+      #ess<-effectiveSize(data.list.mcmc)
+      #gelman<-gelman.diag(data.list.mcmc,multivariate=F)
+      #HPD<-HPDinterval(data.list.allinone)
+      
+      #cat the stats, man
+      #allstats<-cbind(summ$statistics[,1:2],HPD,ess,gelman$psrf)
+      #allstatstable[[f]]<-allstats
+      
+      #write the stats into the directory for future reference
+      #write.csv(allstats,file.path(finaloutput,paste(sp,model,"codastats.csv")))
+      
+      
+      
+      #print("plotting MCMC")
+      
+      #data.list.plot<-lapply(data.list,subset,select=c(which(grepl("Theta_",names(data.list[[1]])) |
+      #                                                         grepl("M_",names(data.list[[1]])) |
+      #                                                        grepl("Nm_",names(data.list[[1]])) |
+      #                                                         grepl("lnPost",names(data.list[[1]])))))
+      #
+      #log transform them, since they come from an exponential prior
+      #data.list.plot<-lapply(data.list.plot,log)
+      #data.list.plot<-mcmc.list(lapply(data.list.plot,mcmc))
+    
+      #data.list.gg<-ggs(data.list.plot,burnin=F,description=paste(f,model,sep="_"))
+      #ggmcmc(data.list.gg,plot=c("ggs_traceplot","ggs_density","ggs_Rhat"),
+      #       simplify_traceplot=0.25,file=file.path(finaloutput,paste(sp,model,".pdf",sep="")))
+      
+      
+      
+      cat("Adding to Nm Violin Plots") 
+      #isolate Nm values for violin plots
+
+  
+      longNm <- data.list %>% bind_rows() %>% select(contains(paste0("Nm_",splevels), ignore.case = F)) %>%
+                melt(measure.vars = paste0("Nm_",splevels), variable.name = "Parameter", value.name = "Nm") %>%
+                mutate(Species = spname)
+  
+      longNm$Parameter <- factor(longNm$Parameter, 
+                                   levels =  paste0("Nm_",splevels),
+                                   labels = rep(c("Out of Dongsha","Into Dongsha"), 
+                                                times = length(splevels)/2), 
+                                   ordered = F)
+  
+      ssNm <- bind_rows(ssNm, longNm)
+      
+      
+
+    cat("Adding to m/mu Violin Plots") 
+ 
+      longM <- data.list %>% bind_rows() %>% select(contains(paste0("M_",splevels), ignore.case = F)) %>%
+                melt(variable.name = "Parameter", value.name = "M") %>%
+                mutate(Species = spname)
+      
+      llevels <- levels(longM$Parameter)
+  
+      longM$Parameter <- factor(longNm$Parameter, ordered = F)
+                                
+                                   
+  
+      ssM <- bind_rows(ssM, longM)
+      
+    cat("Adding to Theta Violin Plots")
+      
+      #pick the Dongsha Population
+      dongsha <- as.numeric(substr(splevels[1], start = 1, stop = 1))
+      longT <- data.list %>% bind_rows() %>% select(contains(paste0("Theta_",dongsha), ignore.case = F)) %>%
+                melt(measure.vars = paste0("Theta_",dongsha), variable.name = "Parameter", 
+                     value.name = "Theta") %>%
+                mutate(Species = spname)
+  
+      ssT <- bind_rows(ssT, longT)
+      
+      
+      
+  cat("Adding to Directional Gene Flow Analysis")
+  
+    out_v_in <- data.list %>% bind_rows() %>% select(contains("M_", ignore.case = F)) %>%
+                    mutate(sum_out = rowSums(across(ends_with("Out")))) %>% 
+                    mutate(sum_in = rowSums(across(ends_with("Into")))) %>%
+                    mutate(out_over_in = sum_out/sum_in) %>% select(c("sum_out", "sum_in","out_over_in")) %>%
+                    mutate(Species = spname)
+    
+    directional <- bind_rows(directional, out_v_in)
+    
+     #calculate statistics for directional dataset
+      print("calculating directional statistics")
+      prob_mode <- out_v_in %>% summarize(ProbSource = (sum(out_over_in < 1) / n()),
+                                         Mode_Out_over_In = mlv(out_over_in, method = "hsm"))
+      out_v_in.mcmc <- mcmc(out_v_in[,c(1:3)])
+      summ<-summary(out_v_in.mcmc)
+      ess<-effectiveSize(out_v_in.mcmc)
+      HPD<-HPDinterval(out_v_in.mcmc)
+      allstats_in_v_out<-cbind(prob_mode,summ$statistics[,1:2],HPD,ess)
+    
+      write.csv(allstats_in_v_out,file.path(finaloutput,paste(sp,"out_v_in","codastats.csv")))
+}
+    
+      violinNm <- ggplot(ssNm, mapping = aes(x=Species, y=Nm, fill=Parameter)) +
+                          geom_violin(draw_quantiles=c(0.025,0.5,0.975))  +
+                          scale_y_log10(breaks=c(0.00001,0.0001,0.001,0.01,0.1,1,10,100,1000,10000,100000),
+                              labels=c("0.00001","0.0001","0.001","0.01","0.1","1",
+                                       "10","100","1,000","10,000","100,000"),
+                              limits=c(0.001,100000)) +
+                              scale_fill_manual(values=c("grey","white")) +
+                              labs(x="Species", y="Effective Female Migrants per Generation")
+    
+      ggsave(file=file.path(finaloutput,paste("final","_",model,"_Nm_violin.pdf",sep="")),
+           plot=violinNm,device="pdf",width=11,height=8.5,units="in")
+      
+      
+      violin_directional <- ggplot(directional, mapping = aes(x=Species, y=out_over_in)) +
+                          geom_violin(draw_quantiles=c(0.025,0.5,0.975))  +
+                          scale_y_log10(breaks=c(0.00001,0.0001,0.001,0.01,0.1,1,10,100,1000,10000,100000),
+                              labels=c("0.00001","0.0001","0.001","0.01","0.1","1",
+                                       "10","100","1,000","10,000","100,000"),
+                              limits=c(0.001,100000)) +
+                              labs(x="Species", y="Gene Flow Out of Dongsha / Into Dongsha")
+    
+      ggsave(file=file.path(finaloutput,paste("final","_",model,"_directional_violin.pdf",sep="")),
+           plot=violin_directional,device="pdf",width=11,height=8.5,units="in")
+
+    
+
+    
+      violinm<-ggplot(ssM, (aes(x=Species, y=M, fill=Parameter))) + 
+        geom_violin(draw_quantiles=c(0.025,0.5,0.975))  + 
+        scale_y_log10(breaks=c(0.00001,0.0001,0.001,0.01,0.1,1,10,100,1000,10000,100000,1000000),
+                      labels=c("0.00001","0.0001","0.001","0.01","0.1","1","10","100","1,000","10,000",
+                               "100,000","1,000,000"),
+                      limits=c(0.0001,1000000)) +
+        scale_fill_manual(values=c("grey","white")) +
+        labs(x="Species", y="proportion of migrants scaled by mutation rate")
+      
+      ggsave(file=file.path(finaloutput,paste("final","_",model,"_m_violin.pdf",sep="")),plot=violinm,device="pdf",width=11,height=8.5,units="in")
+      
+
+    
+    violint<-ggplot(ssT, (aes(x=Species, y=Theta))) + geom_violin(draw_quantiles=c(0.025,0.5,0.975))  + 
+      scale_y_log10(breaks=c(0.00001,0.0001,0.001,0.01,0.1,1.0,10),
+                    labels=c("0.00001","0.0001","0.001","0.01","0.1","1.0","10.0"),
+                    limits=c(0.00001,10)) +
+      scale_fill_manual(values=c("grey","white")) +
+      labs(x="Species", y="Dongsha Theta")
+    
+    ggsave(file=file.path(finaloutput,paste("final","_",model,"_theta_violin.pdf",sep="")),plot=violint,device="pdf",width=11,height=8.5,units="in")
+    
 ```
