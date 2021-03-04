@@ -16,7 +16,7 @@ stratastat<-function(x,pop=pop,fun=nuc.div){
   # Some functions this will work with: nuc.div(), theta.s(), tajima.test() from pegas, FusFs(), exptdHet() from strataG,
   stats<-NULL
   for(p in unique(pop)){
-    stat<-fun(spdat[grep(p,names(spdat))])
+    stat<-fun(x[grep(p,labels(x)),])
     stats<-c(stats,stat)
   }
   names(stats)<-unique(pop)?
@@ -25,6 +25,18 @@ stratastat<-function(x,pop=pop,fun=nuc.div){
 
 se <- function(x){
   sd(x)/sqrt(length(x))
+}
+
+rarefy_dnabin <- function(dnabinobject, subsamplesize, strata){   
+  output <- as.DNAbin(list())
+  for(s in unique(strata)){ 
+    subsample <- dnabinobject[sample(grep(pattern = s,
+                                          x = names(dnabinobject)),
+                                     subsamplesize)]
+    output <- c(output,subsample)
+  }
+  output <- as.matrix(output)
+  return(output)
 }
 
 #initialize a data frame for the stats 
@@ -74,8 +86,15 @@ for(sp in species){
   #make all names unique
   names(spdat)<-paste(pop,1:length(pop),sep="_")
   
+  #count the sequences by pop
+  popcounts <- pop %>% tibble(pop=.) %>% count(pop)
+  
   #get the index of the Dongsha sample
   dongdex <- which(unique(pop)=="Dongsha")
+  
+  #rarefy to the smallest sample size, get new pop map
+  spdat <- rarefy_dnabin(spdat, min(popcounts$n),strata = pop)
+  pop <- as.vector(str_match(labels(spdat), "[:alpha:]+"))
 
   h <- pegas::haplotype(spdat)
   h <- sort(h, what = "label")
@@ -89,32 +108,35 @@ for(sp in species){
   rownames(spdat_p) <- pop
   
   #get the number of individuals
-  n <- getNumInd(spdat_g, by.strata=T)[dongdex,2]
+  summ<-summary(spdat_g$gtypes)
+  n <- summ$strata.smry[dongdex,1]
+  #n <- getNumInd(spdat_g$gtypes, by.strata=T)[dongdex,2]
   #sheesh its complicated to get a haplotype count
-  haps <- length(getSequences(spdat_g[,,dongdex,drop=T])$gene.1)
+  #haps <- length(getSequences(spdat_g[,,dongdex,drop=T])$gene.1)
+  haps <- summ$strata.smry[dongdex,3]
   #number of private alleles
-  priv <- privateAlleles(spdat_g)[dongdex]
+  priv <- privateAlleles(spdat_g$gtypes)[dongdex]
   
   #write an arlequin file for FusFS analysis (just for the p-values)
-  arlequinWrite(spdat_g,file=paste0("../data/",sp,".arp"))
-  write.mega(spdat_g,file=paste0("../data/",sp,".meg"), line.width = 1000, locus = 1)
-}
+  #arlequinWrite(spdat_g,file=paste0("../data/",sp,".arp"))
+  #write.mega(spdat_g,file=paste0("../data/",sp,".meg"), line.width = 1000, locus = 1)
+
   #local Fst (Beta of Weir and Hill 2002 - equation 8 NOT of Foll and Gaggiotti 2006)
-  spdat_wh<-cbind(spdat_g@data$stratum,spdat_g@data)
-  beta_i <- betas(dat=spdat_wh, diploid=F)$betaiovl[dongdex]
+  #spdat_wh<-cbind(spdat_g@data$stratum,spdat_g@data)
+  #beta_i <- betas(dat=spdat_wh, diploid=F)$betaiovl[dongdex]
   
   #measure pi and hd and Fus Fs, and test if the Dongsha value is an outlier (larger or smaller)
-  pi <- stratastat(spdat_p,pop=pop,fun=nuc.div)
-  pi_dongsha <- pi[dongdex]
-  pi_mean <- mean(pi[-dongdex])
-  pi_sd <- sd(pi[-dongdex])
-  pi_p <- t.test(pi[-dongdex], mu=pi_dongsha, alternative="two.sided")$p.value
-
-  hd <- stratastat(spdat_p,pop=pop,fun=hap.div)
-  hd_dongsha <- hd[dongdex]
-  hd_mean <- mean(hd[-dongdex])
-  hd_sd <- sd(hd[-dongdex])
-  hd_p <- t.test(hd[-dongdex], mu=hd_dongsha, alternative="two.sided")$p.value
+  # pi <- stratastat(spdat_p,pop=pop,fun=nuc.div)
+  # pi_dongsha <- pi[dongdex]
+  # pi_mean <- mean(pi[-dongdex])
+  # pi_sd <- sd(pi[-dongdex])
+  # pi_p <- t.test(pi[-dongdex], mu=pi_dongsha, alternative="two.sided")$p.value
+  # 
+  # hd <- stratastat(spdat_p,pop=pop,fun=hap.div)
+  # hd_dongsha <- hd[dongdex]
+  # hd_mean <- mean(hd[-dongdex])
+  # hd_sd <- sd(hd[-dongdex])
+  # hd_p <- t.test(hd[-dongdex], mu=hd_dongsha, alternative="two.sided")$p.value
 
   Fs <- stratastat(spdat_p, pop=pop, fun=fusFs)
   Fs <- unlist(Fs)
@@ -122,7 +144,7 @@ for(sp in species){
   Fs_mean <- mean(Fs[-dongdex])
   Fs_sd <- sd(Fs[-dongdex])
   Fs_p <- t.test(Fs[-dongdex], mu=Fs_dongsha, alternative="greater")$p.value
-
+}
   # put the stats into a vector
   #stats <- c(n, haps, priv, priv/n*100, hd_dongsha, hd_mean, 2*hd_sd, hd_p, pi_dongsha, pi_mean, 2*pi_sd, pi_p, Fs_dongsha, Fs_mean, 2*Fs_sd, Fs_p, beta_i)
   #statdf[sp,] <- stats
@@ -161,7 +183,7 @@ for(sp in species){
                   panel.grid=element_blank()) +
              scale_y_discrete(limits=rev(levels(pairwiseF$result$strata.2)))
         
-  ggsave(filename=paste0(sp,"_PHIst2.pdf"), plot=phiplot)
+  ggsave(filename=paste0(sp,"_PHIst2_rarefied.pdf"), plot=phiplot)
   Phi_plotlist[[sp]] <- phiplot
   
   
@@ -183,26 +205,26 @@ for(sp in species){
                   panel.grid=element_blank()) + 
             scale_y_discrete(limits=rev(levels(pairwiseF$result$strata.2))) #put the y-axis in the correct alphabetical order
   
-  ggsave(filename=paste0(sp,"_Fst.pdf"), plot=Fplot)
+  ggsave(filename=paste0(sp,"_Fst_rarefied.pdf"), plot=Fplot)
   F_plotlist[[sp]] <- Fplot
   
   
   #NMDS
 
-  NMDS_phi<-metaMDSiter(dist = pairwise_phi, k=2, try = 20, trymax = 100, 
-                        pc=T, zerodist="ignore", autotransform = F, maxit = 200, 
-                        model = "hybrid", threshold = 0.1)
-  plot(NMDS_phi)
+  #NMDS_phi<-metaMDSiter(dist = pairwise_phi, k=2, try = 20, trymax = 100, 
+  #                      pc=T, zerodist="ignore", autotransform = F, maxit = 200, 
+  #                      model = "hybrid", threshold = 0.1)
+  #plot(NMDS_phi)
   
-}
 
-write.csv(statdf,file="Dongsha_stats_newcoelestis.csv")
+
+write.csv(statdf,file="Dongsha_stats_rarefied.csv")
 
 PhiPlots <- grid.arrange(grobs = Phi_plotlist,ncol=3)
-ggsave("PHIst_Plots.pdf",PhiPlots)
+ggsave("PHIst_Plots_rarefied.pdf",PhiPlots)
 
 FPlots <- grid.arrange(grobs = F_plotlist,ncol=3)
-ggsave("Fst_Plots.pdf",FPlots)
+ggsave("Fst_Plots_rarefied.pdf",FPlots)
 
 dev.off()
 
