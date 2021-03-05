@@ -117,8 +117,8 @@ bfcalcs<-function(df,ml="bezier.corrected"){
 ```{r harvest_likelihoods}
 wd<-"~/Datasets/dongsha_migrate/"
 setwd(wd)
-
-m<-c("panmixia","n_island","dongsha_sink","dongsha_source","stepping_stone")
+m<-c("panmixia","n_island","stepping_stone")
+#m<-c("panmixia","n_island","dongsha_sink","dongsha_source","stepping_stone")
 
 
 
@@ -224,7 +224,7 @@ dev.off()
 library(perm)
 
 meanlikes<-list()
-permtests<-data.frame(matrix(ncol = 10, nrow = 0))
+permtests<-data.frame(matrix(ncol = 8, nrow = 0))
 colnames(permtests)<-c(m,"k-means p-value","Best Mean","Second Best Mean","p-value Best Mean > Second Mean", "Ln Bayes Factor")
 
 for(dataset in names(modeltables[[1]])){
@@ -246,7 +246,7 @@ for(dataset in names(modeltables[[1]])){
   values<-rbind(y.mean)
   bmvalue<-y.mean[which.max(y.mean)]
 	lbf <- 2*(y.mean-bmvalue)
-  values<-cbind(values,kmeans.p,bestmean,secondmean,ttest$p.value,lbf)
+  values<-cbind(values,kmeans.p,bestmean,secondmean,ttest$p.value,sort(lbf)[2])
   
   permtests[dataset,]<-values
 
@@ -278,7 +278,7 @@ getmodels2<-function(dfr){
 bestmodeltable<-lapply(meanlikes,getmodels2)
 bestmodeltable<-t(as.data.frame(bestmodeltable))
 colnames(bestmodeltable)<-c("bestmodel","bestmodelprob","secondbestmodel","secondbestmodelprob","lnBF")
-bestmodeltable<-cbind(bestmodeltable,permtests[,c(6,9)])
+bestmodeltable<-cbind(bestmodeltable,permtests[,c(4,8)])
 
 
 write.csv(bestmodeltable,file="Final_BestModeltable_Using_Means_of_3reps.csv")
@@ -294,7 +294,8 @@ save(meanlikes,file="Final_Modeltable_Using_Means_of_3reps.R")
 #read in the t-test results
 #tt<-read.table(file="~/Dropbox/Crandall_tobo/scripts/Final_BestModeltable_Using_Means_of_3reps.csv",header=T,sep=",")
 
-means<-data.frame(dataset=character(),species=character(),common=character(),models=character(),modelprob=numeric())
+means<-data.frame(dataset=character(),species=character(),common=character(),
+                  models=character(),modelprob=numeric())
 #names<-read.csv("Species_names.csv", stringsAsFactors = F)
 
 for(dataset in names(modeltables[[1]])){
@@ -328,12 +329,13 @@ for(dataset in names(modeltables[[1]])){
 
 
 #means$species<-factor(means$species,levels=species2)
-means$model<-factor(means$model,levels=m,labels=c("Panmixia","N-Island","Dongsha Sink","Dongsha Source", "Stepping-Stone"))
+means$model<-factor(means$model,levels=m,labels=c("Panmixia","N-Island","Stepping-Stone"))
 
 library(ggplot2)
 library(RColorBrewer)
 
 my.cols<-rev(brewer.pal(5,"RdYlBu"))
+my.cols<-my.cols[c(1,2,5)]
 my.cols[1]<-"#7f7f7f"
 
 
