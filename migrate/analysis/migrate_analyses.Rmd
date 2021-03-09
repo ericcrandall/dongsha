@@ -416,6 +416,82 @@ return(mo)
 
 ```
 
+# Logistic Regression of PLD on Model
+
+Following along [here](https://stats.idre.ucla.edu/r/dae/logit-regression/)
+
+```{r}
+library(raster)
+library(tidyverse)
+
+
+
+species <-read.csv("~/github/dongsha/Species_names.csv")
+dvertices <- read.csv("~/github/dongsha/migrate/dongsha_vertices.csv")
+#species$Migrate_Model <- factor(species$Migrate_Model, levels = c("Stepping-Stone", "Panmixia"), ordered=F)
+distances <- tibble(dongsha = dvertices[1,c(6,5)], sp = species$Working)
+closest <- c("Philippines","Palau","Bunaken","Philippines","Taiwan","Okinawa",
+             "Guam","Philippines","Taiwan")
+farthest <- c("Okinoerabu","Christmas Island","Krakatau","Great Barrier Reef","Okinawa","Kwajalein","Fiji","Okinawa","Okinawa")
+distances <- distances %>% bind_cols(closestPop=closest, farthestPop = farthest) %>%
+              left_join(dvertices[,c(2,6,5)], by= c("closestPop" = "island"))  %>%
+              left_join(dvertices[,c(2,6,5)], by= c("farthestPop" = "island"))
+
+species$closestDistance <- pointDistance(distances$dongsha, 
+                                           distances[,c(5,6)], lonlat = T)/1000
+species$farthestDistance <- pointDistance(distances$dongsha, 
+                                           distances[,c(7,8)], lonlat = T)/1000
+
+
+
+#species$Migrate_Model<-relevel(species$Migrate_Model, ref="Stepping-Stone")
+#species$Max_PLD <- log(species$Max_PLD)
+species$Migrate_Model <- factor(species$Migrate_Model, 
+                                levels = c("Panmixia","Stepping-Stone"))
+
+#pld_model_mm <- multinom(Migrate_Model ~ Max_PLD, data = species)
+
+pld_model_l <- glm(Migrate_Model ~ Max_PLD, 
+                   data = species, family = "binomial")
+
+pld_model_l2 <- glm(Migrate_Model ~ Max_PLD * farthestDistance * closestDistance, 
+                    data = species, family = "binomial")
+
+step_l2 <- stepAIC(pld_model_l2, directions = "backward")
+
+pld_model_l3 <- glm(Migrate_Model ~ Max_PLD * closestDistance, 
+                    data = species, family = "binomial")
+
+step_l3 <- stepAIC(pld_model_l3)
+
+with(pld_model_l, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FALSE))
+
+exp(cbind(OR = coef(pld_model_l), confint(pld_model_l)))
+
+predict.df <- tibble(Max_PLD = seq(1,180), closestDistance = 238, farthestDistance = 500)
+
+prob_ss<-data.frame(Max_PLD,predict(pld_model_l, predict.df, type = "link", se = TRUE))
+
+species<-species %>% mutate(Prob = as.numeric(Migrate_Model)-1)
+
+prob_ss <- prob_ss %>% mutate(Prob = plogis(fit), LL = plogis(fit - (1.96 * se.fit)), 
+                              UL = plogis(fit + (1.96 * se.fit)))
+
+ggplot(prob_ss, aes(x = Max_PLD, y = Prob)) + 
+  geom_ribbon(aes(ymin = LL,ymax = UL), fill = "blue", alpha = 0.2) +
+  geom_line() + 
+  geom_point(data = species, mapping = aes(x = Max_PLD, y = Prob, 
+                                           color = Migrate_Model)) + 
+  geom_text(data = species, mapping = aes(x = Max_PLD, y = Prob, label = Species,
+                                          vjust = 2), size = 2, angle = 45) +
+  scale_color_discrete(type=c("white","black")) + 
+  ylab("Probability of Dongsha Stepping-Stone") + 
+  xlab("Maximum Pelagic Larval Duration") +
+  xlim(20,70) + theme(legend.position = "none")
+
+ggsave(filename = "./migrate/dongsha_logistic_model.pdf", width = 8, height=6,units = "in")
+
+```
 
 ```{r}
 wd <- "/Users/eric/Datasets/dongsha_migrate"

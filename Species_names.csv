@@ -1,10 +1,10 @@
-﻿Working,Species,Common
-a_japonicus,Acanthurus japonicus,Japan Surgeonfish
-c_auriga,Chaetodon auriga,Threadfin Butterflyfish
-c_striatus,Ctenochaetus striatus,Striated Surgeonfish
-c_vroliki,Centropyge vroliki,Pearlscale Angelfish
-d_aruanus,Dascyllus aruanus,Whitetail Dascyllus
-c_lunulatus,Chaetodon lunulatus,Oval Butterflyfish
-l_kasmira,Lutjanus kasmira,Bluestripe Snapper
-n_plicata,Nerita plicata,Plicated Nerite
-p_coelestis,Pomacentrus coelestis,Neon Damselfish
+﻿Working,Species,Common,Max_PLD,Migrate_Model
+a_japonicus,Acanthurus japonicus,Japan Surgeonfish,62,Panmixia
+c_auriga,Chaetodon auriga,Threadfin Butterflyfish,48,Panmixia
+c_striatus,Ctenochaetus striatus,Striated Surgeonfish,59,Stepping-Stone
+c_vroliki,Centropyge vroliki,Pearlscale Angelfish,29,Stepping-Stone
+d_aruanus,Dascyllus aruanus,Whitetail Dascyllus,26,Stepping-Stone
+c_lunulatus,Chaetodon lunulatus,Oval Butterflyfish,35,Stepping-Stone
+l_kasmira,Lutjanus kasmira,Bluestripe Snapper,60,Panmixia
+n_plicata,Nerita plicata,Plicated Nerite,180,Panmixia
+p_coelestis,Pomacentrus coelestis,Neon Damselfish,39,Panmixia
