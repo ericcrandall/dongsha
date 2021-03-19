@@ -437,6 +437,9 @@ distances <- distances %>% bind_cols(closestPop=closest, farthestPop = farthest)
               left_join(dvertices[,c(2,6,5)], by= c("closestPop" = "island"))  %>%
               left_join(dvertices[,c(2,6,5)], by= c("farthestPop" = "island"))
 
+#get mean and sd of each group
+species %>% group_by(Migrate_Model) %>% summarize(mean = mean(Max_PLD), sd = sd(Max_PLD))
+
 species$closestDistance <- pointDistance(distances$dongsha, 
                                            distances[,c(5,6)], lonlat = T)/1000
 species$farthestDistance <- pointDistance(distances$dongsha, 
@@ -451,8 +454,9 @@ species$Migrate_Model <- factor(species$Migrate_Model,
 
 #pld_model_mm <- multinom(Migrate_Model ~ Max_PLD, data = species)
 
-pld_model_l <- glm(Migrate_Model ~ Max_PLD, 
+pld_model_l <- glm(Migrate_Model ~ Max_PLD + farthestDistance + closestDistance, 
                    data = species, family = "binomial")
+step_l <- stepAIC(pld_model_l, directions = "backward", k = log(9))
 
 pld_model_l2 <- glm(Migrate_Model ~ Max_PLD * farthestDistance * closestDistance, 
                     data = species, family = "binomial")
@@ -464,9 +468,10 @@ pld_model_l3 <- glm(Migrate_Model ~ Max_PLD * closestDistance,
 
 step_l3 <- stepAIC(pld_model_l3)
 
-with(pld_model_l, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FALSE))
+with(step_l, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FALSE))
+with(step_l, null.deviance - deviance)
 
-exp(cbind(OR = coef(pld_model_l), confint(pld_model_l)))
+exp(cbind(OR = coef(step_l), confint(step_l)))
 
 predict.df <- tibble(Max_PLD = seq(1,180), closestDistance = 238, farthestDistance = 500)
 
