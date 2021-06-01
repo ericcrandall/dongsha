@@ -457,6 +457,12 @@ species$Migrate_Model <- factor(species$Migrate_Model,
 pld_model_l <- glm(Migrate_Model ~ Max_PLD + farthestDistance + closestDistance, 
                    data = species, family = "binomial")
 step_l <- stepAIC(pld_model_l, directions = "backward", k = log(9))
+# get the odd ratios for one day decrease in PLD
+1-exp(cbind(OR = coef(step_l), confint(step_l)))
+
+#                       OR     2.5 %        97.5 %
+# (Intercept) -76.04597755 0.3987480 -2.644032e+05
+# Max_PLD       0.09258134 0.2397758  1.798662e-03
 
 pld_model_l2 <- glm(Migrate_Model ~ Max_PLD * farthestDistance * closestDistance, 
                     data = species, family = "binomial")

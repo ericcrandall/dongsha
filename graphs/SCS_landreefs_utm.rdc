@@ -1,0 +1,24 @@
+file format : IDRISI Raster A.1
+file title  : SCS_land_reefs5
+data type   : real
+file type   : binary
+columns     : 1905
+rows        : 2277
+ref. system : plane
+ref. units  : m
+unit dist.  : 1.0000000
+min. X      : -844999.565277084
+max. X      : 1060000.43472292
+min. Y      : 547325.910034841
+max. Y      : 2824325.91003484
+pos'n error : unknown
+resolution  : 1000
+min. value  : 0
+max. value  : 200
+display min : 0
+display max : 200
+value units : unspecified
+value error : unknown
+flag value  : -3.4e+38
+flag def'n  : no data
+legend cats : 0

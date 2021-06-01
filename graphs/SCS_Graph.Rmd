@@ -1,0 +1,107 @@
+---
+title: "Graph Theoretical Analysis of Dispersal in the South China Sea"
+output: html_notebook
+---
+
+```{r setup}
+library(igraph)
+library(gdistance)
+library(raster)
+library(ggplot2)
+library(tidyverse)
+library(graph4lg)
+library(gstudio)
+library(popgraph)
+```
+
+After our first round of review at PeerJ, reviewers rightly questioned our main conclusion that Dongsha is an important stepping-stone for the South China Sea (SCS). While we had shown that species with shorter pelagic larval durations had smaller PLDs, we haven't shown how this applies to Dongsha specifically. In response to these reviews I wrote:
+
+> we should consider some sort of network analysis of the SCS, taking the maximum dispersal distances I calculated for Figure 1B, and determining how often Dongsha seems to be an important stepping-stone. I’m happy to try this out, although it may take me a few weeks as I have a growing list of commitments. If others want to give it a shot, I have a book chapter on network analysis I could send your way.
+
+Rob replied:
+
+>  One is to use a graph theoretical approach and identify whether or not Dongsha is a cut node in the network.  The R package igraph should work for this to identify cutnodes that when removed alter the network and provide objective support if Dongsha is identified as a cutnode. 
+
+And having read Melanie Murphy's chapter on graph theory in *Landscape Genetics*, I now think we need a measure of "betweenness centrality" for Dongsha.
+
+I took the plot of SCS coral reefs that I created for Figure 1B, pulled out just the reefs in Affinity Photo () and converted it to a Tiff (`Merge Visible Layers` + `Select Sampled Color`).
+
+
+
+```{r}
+reefs <- raster("SCS_reefs2.tiff", native = T, band=1)
+dim(reefs)
+
+crs(reefs) <-"+proj=longlat +lat_0=15 +lat_ts=0 +lon_0=113.5 +datum=WGS84"
+scs_extent <- extent(105.75,122,5,25)
+extent(reefs) <- scs_extent
+plot(reefs)
+
+#reefs[reefs>=150] <- 200
+reefs[reefs>10] <- 100
+reefs[reefs<=10] <- 0
+plot(reefs)
+
+
+
+writeRaster(reefs,filename="SCS_reefs_latlong.rst", format = "IDRISI", overwrite=T)
+
+
+
+
+
+
+#Project to utm
+
+utmproj <- crs("+proj=utm +zone=50N ")
+reefs_utm <- projectRaster(from=reefs, crs=utmproj)
+plot(reefs_utm)
+#reefs_utm[reefs_utm>=150] <- 200
+reefs_utm[reefs_utm>10] <- 100
+reefs_utm[reefs_utm<=10] <- 0
+plot(reefs_utm)
+
+writeRaster(reefs_utm,filename="SCS_reefs_utm.rst", format = "IDRISI", overwrite=T)
+```
+
+
+```{r}
+
+
+reefs <- raster("SCS_land_reefs5.tiff", native = T, band=2)
+dim(reefs)
+
+crs(reefs) <-"+proj=longlat +lat_0=15 +lat_ts=0 +lon_0=113.5 +datum=WGS84"
+scs_extent <- extent(105,122,5,25)
+extent(reefs) <- scs_extent
+plot(reefs)
+
+reefs[reefs>=150] <- 200
+reefs[reefs>10 & reefs < 150] <- 100
+reefs[reefs<=10] <- 0
+plot(reefs)
+
+
+
+writeRaster(reefs,filename="SCS_landreefs_latlong.rst", format = "IDRISI", overwrite=T)
+
+
+
+
+
+
+#Project to utm
+
+utmproj <- crs("+proj=utm +zone=50N ")
+reefs_utm <- projectRaster(from=reefs, crs=utmproj, res = 1000)
+plot(reefs_utm)
+reefs_utm[reefs_utm>=150] <- 200
+reefs_utm[reefs_utm>10 & reefs_utm < 150] <- 100
+reefs_utm[reefs_utm<=10] <- 0
+plot(reefs_utm)
+
+writeRaster(reefs_utm,filename="SCS_landreefs_utm.rst", format = "IDRISI", overwrite=T)
+
+nodes <- tibble(value = getValues(reefs)) %>% bind_cols(as_tibble(coordinates(reefs))) %>% filter(value>0)
+ggplot() + geom_raster(data = nodes, aes(x=x,y=y))
+```
