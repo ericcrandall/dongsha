@@ -5,13 +5,9 @@ output: html_notebook
 
 ```{r setup}
 library(igraph)
-library(gdistance)
 library(raster)
-library(ggplot2)
 library(tidyverse)
-library(graph4lg)
-library(gstudio)
-library(popgraph)
+
 ```
 
 After our first round of review at PeerJ, reviewers rightly questioned our main conclusion that Dongsha is an important stepping-stone for the South China Sea (SCS). While we had shown that species with shorter pelagic larval durations had smaller PLDs, we haven't shown how this applies to Dongsha specifically. In response to these reviews I wrote:
@@ -24,9 +20,9 @@ Rob replied:
 
 And having read Melanie Murphy's chapter on graph theory in *Landscape Genetics*, I now think we need a measure of "betweenness centrality" for Dongsha.
 
-I took the plot of SCS coral reefs that I created for Figure 1B, pulled out just the reefs in Affinity Photo () and converted it to a Tiff (`Merge Visible Layers` + `Select Sampled Color`).
+I took the plot of SCS coral reefs that I created for Figure 1B (derived from reefs depicted in Zhao et al. 2016 and Dorman et al. 2016), pulled out just the reefs in Affinity Photo and converted it to a Tiff (`Merge Visible Layers` + `Select Sampled Color`). I did the same with the land from the same figure.
 
-
+Below I read in the reef raster, set the extent, and change all reef pixel to a single value (100), project it to UTM, and set the resolution to 1km x 1km. I then write it to a IDRISI geo-raster.
 
 ```{r}
 reefs <- raster("SCS_reefs2.tiff", native = T, band=1)
@@ -41,67 +37,137 @@ plot(reefs)
 reefs[reefs>10] <- 100
 reefs[reefs<=10] <- 0
 plot(reefs)
-
-
-
 writeRaster(reefs,filename="SCS_reefs_latlong.rst", format = "IDRISI", overwrite=T)
-
-
-
-
-
-
-#Project to utm
-
-utmproj <- crs("+proj=utm +zone=50N ")
-reefs_utm <- projectRaster(from=reefs, crs=utmproj)
-plot(reefs_utm)
-#reefs_utm[reefs_utm>=150] <- 200
-reefs_utm[reefs_utm>10] <- 100
-reefs_utm[reefs_utm<=10] <- 0
-plot(reefs_utm)
-
-writeRaster(reefs_utm,filename="SCS_reefs_utm.rst", format = "IDRISI", overwrite=T)
-```
-
-
-```{r}
-
-
-reefs <- raster("SCS_land_reefs5.tiff", native = T, band=2)
-dim(reefs)
-
-crs(reefs) <-"+proj=longlat +lat_0=15 +lat_ts=0 +lon_0=113.5 +datum=WGS84"
-scs_extent <- extent(105,122,5,25)
-extent(reefs) <- scs_extent
-plot(reefs)
-
-reefs[reefs>=150] <- 200
-reefs[reefs>10 & reefs < 150] <- 100
-reefs[reefs<=10] <- 0
-plot(reefs)
-
-
-
-writeRaster(reefs,filename="SCS_landreefs_latlong.rst", format = "IDRISI", overwrite=T)
-
-
-
-
-
 
 #Project to utm
 
 utmproj <- crs("+proj=utm +zone=50N ")
 reefs_utm <- projectRaster(from=reefs, crs=utmproj, res = 1000)
 plot(reefs_utm)
-reefs_utm[reefs_utm>=150] <- 200
-reefs_utm[reefs_utm>10 & reefs_utm < 150] <- 100
+#reefs_utm[reefs_utm>=150] <- 200
+reefs_utm[reefs_utm>10] <- 100
 reefs_utm[reefs_utm<=10] <- 0
 plot(reefs_utm)
 
-writeRaster(reefs_utm,filename="SCS_landreefs_utm.rst", format = "IDRISI", overwrite=T)
+writeRaster(reefs_utm,filename="SCS_reefs_utm_1000.rst", format = "IDRISI", overwrite=T)
+```
 
-nodes <- tibble(value = getValues(reefs)) %>% bind_cols(as_tibble(coordinates(reefs))) %>% filter(value>0)
-ggplot() + geom_raster(data = nodes, aes(x=x,y=y))
+And here I do the same for the land raster.
+
+```{r}
+land <- raster("SCS_land.tiff", native = T, band=2)
+dim(land)
+
+crs(land) <-"+proj=longlat +lat_0=15 +lat_ts=0 +lon_0=113.5 +datum=WGS84"
+scs_extent <- extent(105,122,5,25)
+extent(land) <- scs_extent
+plot(land)
+
+land[land>=50] <- 200
+#land[land>1 & land < 50] <- 100
+land[land<=50] <- 0
+plot(land)
+
+writeRaster(land,filename="SCS_land_latlong.rst", format = "IDRISI", overwrite=T)
+#Project to utm
+
+utmproj <- crs("+proj=utm +zone=50N ")
+land_utm <- projectRaster(from=land, crs=utmproj, res = 1000)
+plot(land_utm)
+land_utm[land_utm>=50] <- 10000
+#land_utm[land_utm>50 & land_utm < 150] <- 100
+land_utm[land_utm<=50] <- 1
+plot(land_utm)
+
+writeRaster(land_utm,filename="SCS_land_utm_1000.rst", format = "IDRISI", overwrite=T)
+writeRaster(land_utm,filename="SCS_land_utm_1000.tif", format = "GTiff", overwrite=T)
+
+```
+
+
+# Using Graphab 2.6
+
+Found this great little [software](http://thema.univ-fcomte.fr/productions/graphab/en-home.html) by Foltete et al. (2012) that does exactly what I want.
+
+
+1. Create Graph
+  a. define path
+  b. import landscape raster (SCS_reefs_utm_1000.rst)
+  c. select 8-"connexity", and "100" as habitat patch code. 
+  d. Minimum patch area 25ha
+  e. Do NOT simplify patch for planar graph
+
+2. Create Linkset
+  a. Name linkset
+  b. Select "Complete", Save Real Path
+  c. Select maximum distance in km using PLD x avg. current speed in SCS (18.7 km/day)
+  d. Select cost from raster, use SCS_land_utm_1000.rst
+  
+3. Create Graph
+  a. name graph
+  b. select appropriate linkset
+  c. enter same maximum distance as used for linkset
+  d. include intra-patch distances for metrics
+
+4. Measure local graph metrics
+  a. Closeness centrality
+  b. Betweenness centrality
+    1. measure as "Batch parameter" p = 0.5, beta = 0, from 10km to 200km, by increments of 10km
+    
+5. Steps 2-4 for all 9 species. Export attributes table to csv.
+  
+  Foltête, J.-C., Clauzel, C., & Vuidel, G. (2012). A software tool dedicated to the modelling of landscape networks. Environmental Modelling & Software, 38, 316–327. doi: 10/f4bjvp
+
+```{r}
+
+BC <- read_delim(file = "./graphab_SCS_cost6/SCS_graph_metrics.txt", delim = "\t")
+
+# rank them
+BCrank <- BC %>%  select(starts_with("BC")) %>% transmute_all(desc) %>% transmute_all(rank) %>% rowwise()
+
+meanranks <- BCrank %>% mutate(Ajaponicus=mean(c_across(ends_with("Ajaponicus")))) %>% 
+                        mutate(Cauriga=mean(c_across(ends_with("Cauriga")))) %>%
+                        mutate(Clunulatus=mean(c_across(ends_with("Clunulatus")))) %>%
+                        mutate(Cstriatus=mean(c_across(ends_with("Cstriatus")))) %>%
+                        mutate(Cvroliki=mean(c_across(ends_with("Cvroliki")))) %>%
+                        mutate(Daruanus=mean(c_across(ends_with("Daruanus")))) %>%
+                        mutate(Lkasmira=mean(c_across(ends_with("Lkasmira")))) %>%
+                        mutate(Nplicata=mean(c_across(ends_with("Nplicata")))) %>%
+                        mutate(Pcoelestis=mean(c_across(ends_with("Pcoelestis")))) %>% select(180:188)
+
+ meanranks[14,]
+
+
+```
+
+
+And now I'm interested in measuring *graph diameter* for each species as well, but Graphab only does so in units of km. So I am going to use igraph to do so in units of steps. Also ended up measuring betweenness centrality with igraph because igraph does it in a more basic understandable way, without weighting by distance and reef capacity for example. I wrote out these results and re-imported them into Graphab (added them to patches.csv) for final visualization.
+
+```{r}
+
+species <- c("Ajaponicus","Cauriga","Clunulatus","Cstriatus","Cvroliki","Daruanus",
+             "Lkasmira","Nplicata","Pcoelestis")
+stats <- NULL
+names <- "ID"
+vertices <- tibble(.rows=115, vertex=1:115)
+for(s in species){
+  csv <- read_csv(paste0("./graphab_SCS_cost6/",s,"-links.csv"))
+  graph <- graph.data.frame(csv[,1:2])
+  d <- diameter(graph)
+  #betweenness centrality for Dongsha
+  BC <-betweenness(graph, directed = F)
+  BC <- BC[order(as.numeric(names(BC)))]
+  BCdongsha <- BC["14"]
+  rank <- rank(desc(betweenness(graph, directed=F)))
+  rank <- rank[order(as.numeric(names(rank)))]
+  rankdongsha <- rank["14"]
+  stats <- rbind(stats,c(diameter=d,dongshaBC=BCdongsha,DongshaBCrank=rankdongsha))
+  vertices <- bind_cols(vertices,BC=BC,r=rank)
+  names <- c(names,paste0(s,"_BC"),paste0(s,"_rank"))
+}
+vertices<-setNames(vertices,names)
+stats <- cbind(species,stats)
+
+#write_csv(stats,file = "igraph_statistics.csv")
+#write_csv(vertices, file = "igraph_vertices.csv")
 ```
