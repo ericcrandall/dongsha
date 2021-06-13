@@ -433,9 +433,11 @@ distances <- tibble(dongsha = dvertices[1,c(6,5)], sp = species$Working)
 closest <- c("Philippines","Palau","Bunaken","Philippines","Taiwan","Okinawa",
              "Guam","Philippines","Taiwan")
 farthest <- c("Okinoerabu","Christmas Island","Krakatau","Great Barrier Reef","Okinawa","Kwajalein","Fiji","Okinawa","Okinawa")
+
 distances <- distances %>% bind_cols(closestPop=closest, farthestPop = farthest) %>%
               left_join(dvertices[,c(2,6,5)], by= c("closestPop" = "island"))  %>%
               left_join(dvertices[,c(2,6,5)], by= c("farthestPop" = "island"))
+
 
 #get mean and sd of each group
 species %>% group_by(Migrate_Model) %>% summarize(mean = mean(Max_PLD), sd = sd(Max_PLD))
@@ -473,7 +475,7 @@ pld_model_l3 <- glm(Migrate_Model ~ Max_PLD * closestDistance,
                     data = species, family = "binomial")
 
 step_l3 <- stepAIC(pld_model_l3)
-
+#p-value
 with(step_l, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FALSE))
 with(step_l, null.deviance - deviance)
 
@@ -483,7 +485,7 @@ predict.df <- tibble(Max_PLD = seq(1,180), closestDistance = 238, farthestDistan
 
 prob_ss<-data.frame(Max_PLD,predict(pld_model_l, predict.df, type = "link", se = TRUE))
 
-species<-species %>% mutate(Prob = as.numeric(Migrate_Model)-1)
+species <- species %>% mutate(Prob = as.numeric(Migrate_Model)-1)
 
 prob_ss <- prob_ss %>% mutate(Prob = plogis(fit), LL = plogis(fit - (1.96 * se.fit)), 
                               UL = plogis(fit + (1.96 * se.fit)))
@@ -503,6 +505,56 @@ ggplot(prob_ss, aes(x = Max_PLD, y = Prob)) +
 ggsave(filename = "./migrate/dongsha_logistic_model.pdf", width = 8, height=6,units = "in")
 
 ```
+
+Same thing, but for graph diameter
+
+```{r}
+# graph diameter from igraph_statistics.csv
+species$gd <- c(a_japonicus=3,c_auriga=4,c_striatus=3,c_vroliki=6,d_aruanus=7,
+                c_lunulatus=5,l_kasmira=3,n_plicata=1,p_coelestis=4) 
+
+gd_model_l <- glm(Migrate_Model ~ gd * closestDistance, 
+                    data = species, family = "binomial")
+
+gd_step_l <- stepAIC(pld_model_l4, directions = "backward", k = log(9))
+
+#p-value
+with(gd_step_l, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FALSE))
+#
+with(gd_step_l, null.deviance - deviance)
+
+exp(cbind(OR = coef(gd_step_l), confint(gd_step_l)))
+
+gd_predict.df <- tibble(gd = seq(1,10),  closestDistance = 238, farthestDistance = 500)
+
+prob_ss<-data.frame(graph_diameter=1:10,predict(gd_step_l, gd_predict.df, type = "link", se = TRUE))
+
+species<-species %>% mutate(Prob = as.numeric(Migrate_Model)-1)
+
+prob_ss <- prob_ss %>% mutate(Prob = plogis(fit), LL = plogis(fit - (1.96 * se.fit)), 
+                              UL = plogis(fit + (1.96 * se.fit)))
+
+ggplot(prob_ss, aes(x = graph_diameter, y = Prob)) + 
+  geom_ribbon(aes(ymin = LL,ymax = UL), fill = "blue", alpha = 0.2) +
+  geom_line() + 
+  geom_point(data = species, mapping = aes(x = gd, y = Prob, 
+                                           color = Migrate_Model)) + 
+  geom_text(data = species, mapping = aes(x = gd, y = Prob, label = Species,
+                                          vjust = 2), size = 2, angle = 45) +
+  scale_color_discrete(type=c("white","black")) + 
+  ylab("Probability of Dongsha Stepping-Stone") + 
+  xlab("Graph Diameter") +
+  theme(legend.position = "none")
+
+ggsave(filename = "./migrate/dongsha_logistic_model_gd.pdf", width = 8, height=6,units = "in")
+
+summary(gd_step_l)
+
+#correlation of PLD with Graph Distance
+summary(lm(gd~Max_PLD, data=species))
+
+```
+
 
 ```{r}
 wd <- "/Users/eric/Datasets/dongsha_migrate"
